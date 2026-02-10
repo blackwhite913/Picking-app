@@ -9,6 +9,7 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
   const scanBuffer = useRef('');
   const lastKeyTime = useRef(0);
   const errorTimeoutRef = useRef(null);
+  const isFromScanner = useRef(false);
 
   // Do NOT auto-focus the input on mount to avoid opening the soft keyboard on scanning devices.
   // Scanner input is captured by the scanner service and keyboard listener below.
@@ -17,6 +18,7 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
   useEffect(() => {
     const unsubscribe = scannerService.addListener((scanData) => {
       console.log('[GetToteModal] Scan from scanner service:', scanData);
+      isFromScanner.current = true;
       setToteBarcode(scanData.barcode);
     });
 
@@ -84,12 +86,14 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
     onConfirm(toteBarcode.trim());
   }, [toteBarcode, expectedTote, onConfirm]);
 
-  // Auto-submit when barcode entered (after scanner adds it)
+  // Auto-submit when barcode entered from scanner (not manual typing)
   useEffect(() => {
-    if (toteBarcode && toteBarcode.length > 3) {
+    // Only auto-submit if input came from scanner, not manual typing
+    if (isFromScanner.current && toteBarcode && toteBarcode.length > 3) {
       // Small delay to let user see the value
       const timer = setTimeout(() => {
         handleSubmit();
+        isFromScanner.current = false; // Reset flag
       }, 300);
       return () => clearTimeout(timer);
     }
@@ -140,6 +144,7 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
               type="text"
               value={toteBarcode}
               onChange={(e) => {
+                isFromScanner.current = false; // Manual typing, not scanner
                 setToteBarcode(e.target.value);
                 setError('');
               }}
