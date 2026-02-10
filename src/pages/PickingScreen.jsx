@@ -1000,7 +1000,7 @@ export default function PickingScreen() {
         </div>
 
         {/* Next Location Button */}
-        <div className="flex-none p-4 bg-warehouse-bg border-t border-warehouse-gray-dark">
+        <div className="flex-none p-4 pb-20 bg-warehouse-bg border-t border-warehouse-gray-dark">
           {allOrdersComplete && (
             <button
               onClick={handleNextLocation}
