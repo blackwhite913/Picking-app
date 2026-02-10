@@ -12,16 +12,10 @@ export default function Login() {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  // #region agent log
-  const [debugInfo, setDebugInfo] = useState('');
-  // #endregion
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
-    // #region agent log
-    setDebugInfo('');
-    // #endregion
 
     // Check for internet connection first
     if (!navigator.onLine) {
@@ -30,30 +24,6 @@ export default function Login() {
     }
 
     setLoading(true);
-
-    // #region agent log
-    // Hypothesis A,B: Check what URL is actually being used
-    const apiModule = await import('../api/index.js');
-    const actualBaseURL = apiModule.default.defaults.baseURL;
-    console.log('[DEBUG] Actual API baseURL:', actualBaseURL);
-    console.log('[DEBUG] Environment:', import.meta.env.MODE);
-    
-    // Hypothesis D: Test if we can reach the backend at all
-    let networkTest = 'Testing...';
-    try {
-      const testResponse = await fetch(`${actualBaseURL}/health`, { 
-        method: 'GET',
-        signal: AbortSignal.timeout(5000)
-      });
-      networkTest = `Reachable (${testResponse.status})`;
-      console.log('[DEBUG] Network test successful:', testResponse.status);
-    } catch (testErr) {
-      networkTest = `Failed: ${testErr.message}`;
-      console.log('[DEBUG] Network test failed:', testErr);
-    }
-    
-    setDebugInfo(`URL: ${actualBaseURL} | Test: ${networkTest}`);
-    // #endregion
 
     try {
       const response = await authAPI.login(pickerId, pin);
@@ -71,28 +41,6 @@ export default function Login() {
       navigate('/batches');
     } catch (err) {
       console.error('Login error:', err);
-
-      // #region agent log
-      // Hypothesis C,D: Capture detailed error information
-      console.log('[DEBUG] Error code:', err.code);
-      console.log('[DEBUG] Error message:', err.message);
-      console.log('[DEBUG] Error response:', err.response);
-      console.log('[DEBUG] Error request:', err.request);
-      console.log('[DEBUG] Error config:', err.config);
-      
-      const errorDetails = {
-        code: err.code,
-        message: err.message,
-        hasResponse: !!err.response,
-        responseStatus: err.response?.status,
-        responseData: err.response?.data,
-        requestURL: err.config?.url,
-        requestBaseURL: err.config?.baseURL,
-        requestMethod: err.config?.method
-      };
-      console.log('[DEBUG] Full error details:', JSON.stringify(errorDetails, null, 2));
-      setDebugInfo(prev => `${prev} | Error: ${err.code || 'NO_CODE'} | Status: ${err.response?.status || 'NO_RESPONSE'}`);
-      // #endregion
 
       // Check for specific network errors
       if (!err.response) {
@@ -163,15 +111,6 @@ export default function Login() {
               <p className="text-warehouse-red text-sm">{error}</p>
             </div>
           )}
-
-          {/* #region agent log */}
-          {/* Debug Info Display */}
-          {debugInfo && (
-            <div className="bg-blue-900/20 border border-blue-500 rounded-lg p-3">
-              <p className="text-blue-300 text-xs font-mono break-all">{debugInfo}</p>
-            </div>
-          )}
-          {/* #endregion */}
 
           {/* Login Button */}
           <button

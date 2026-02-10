@@ -8,6 +8,7 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
   const inputRef = useRef(null);
   const scanBuffer = useRef('');
   const lastKeyTime = useRef(0);
+  const errorTimeoutRef = useRef(null);
 
   // Do NOT auto-focus the input on mount to avoid opening the soft keyboard on scanning devices.
   // Scanner input is captured by the scanner service and keyboard listener below.
@@ -16,14 +17,15 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
   useEffect(() => {
     const unsubscribe = scannerService.addListener((scanData) => {
       console.log('[GetToteModal] Scan from scanner service:', scanData);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/fdf83986-196c-4edf-be7b-8532a0e1a438',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GetToteModal.jsx:18',message:'Scanner service received',data:{barcode:scanData.barcode,source:scanData.source},timestamp:Date.now(),runId:'tote-debug',hypothesisId:'F'})}).catch(()=>{});
-      // #endregion
       setToteBarcode(scanData.barcode);
     });
 
     return () => {
       unsubscribe();
+      // Clear any pending error timeout on unmount
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -58,42 +60,33 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
   const handleSubmit = (e) => {
     e?.preventDefault();
     
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/fdf83986-196c-4edf-be7b-8532a0e1a438',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GetToteModal.jsx:56',message:'handleSubmit called',data:{toteBarcode,expectedTote,hasEvent:!!e},timestamp:Date.now(),runId:'tote-debug',hypothesisId:'G'})}).catch(()=>{});
-    // #endregion
-    
     if (!toteBarcode.trim()) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/fdf83986-196c-4edf-be7b-8532a0e1a438',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GetToteModal.jsx:59',message:'Empty tote barcode',data:{},timestamp:Date.now(),runId:'tote-debug',hypothesisId:'G'})}).catch(()=>{});
-      // #endregion
       setError('Please scan or enter a tote barcode');
       return;
     }
 
     // If expectedTote exists, validate it matches
     if (expectedTote && toteBarcode.trim().toUpperCase() !== expectedTote.toUpperCase()) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/fdf83986-196c-4edf-be7b-8532a0e1a438',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GetToteModal.jsx:65',message:'Tote mismatch',data:{scanned:toteBarcode.trim().toUpperCase(),expected:expectedTote.toUpperCase()},timestamp:Date.now(),runId:'tote-debug',hypothesisId:'H'})}).catch(()=>{});
-      // #endregion
       setError(`Wrong tote! Expected: ${expectedTote}`);
+      
+      // Auto-clear the input after 2 seconds to allow rescanning
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
+      errorTimeoutRef.current = setTimeout(() => {
+        setToteBarcode('');
+        setError('');
+      }, 2000);
+      
       return;
     }
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/fdf83986-196c-4edf-be7b-8532a0e1a438',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GetToteModal.jsx:69',message:'Calling onConfirm',data:{barcode:toteBarcode.trim()},timestamp:Date.now(),runId:'tote-debug',hypothesisId:'I'})}).catch(()=>{});
-    // #endregion
     onConfirm(toteBarcode.trim());
   };
 
   // Auto-submit when barcode entered (after scanner adds it)
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/fdf83986-196c-4edf-be7b-8532a0e1a438',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GetToteModal.jsx:74',message:'Auto-submit effect triggered',data:{toteBarcode,length:toteBarcode?.length,willAutoSubmit:toteBarcode?.length>3},timestamp:Date.now(),runId:'tote-debug',hypothesisId:'J'})}).catch(()=>{});
-    // #endregion
     if (toteBarcode && toteBarcode.length > 3) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/fdf83986-196c-4edf-be7b-8532a0e1a438',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GetToteModal.jsx:76',message:'Setting auto-submit timer',data:{delay:300},timestamp:Date.now(),runId:'tote-debug',hypothesisId:'J'})}).catch(()=>{});
-      // #endregion
       // Small delay to let user see the value
       const timer = setTimeout(() => {
         handleSubmit();

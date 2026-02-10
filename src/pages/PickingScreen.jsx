@@ -830,9 +830,6 @@ export default function PickingScreen() {
                 <p className="text-warehouse-gray-light text-xs">
                   Location {currentLocationIndex + 1} of {locations?.length}
                 </p>
-                {!window.location.hostname.includes('warehouse-ly.com') && (
-                  <span className="text-[10px] bg-yellow-500 text-black px-1 py-0 rounded font-bold leading-none">DEV</span>
-                )}
               </div>
               <div className="w-full bg-warehouse-gray-medium h-1 rounded-full mt-0.5">
                 <div

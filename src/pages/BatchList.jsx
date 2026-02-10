@@ -113,9 +113,6 @@ export default function BatchList() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-warehouse-gray-light text-xs uppercase tracking-wider font-semibold">Picker</h1>
-                {!window.location.hostname.includes('warehouse-ly.com') && (
-                  <span className="text-xs bg-yellow-500 text-black px-1.5 py-0.5 rounded font-bold">DEV</span>
-                )}
               </div>
               <p className="text-white text-lg font-bold bg-warehouse-blue/20 px-3 py-0.5 -ml-1 rounded border border-warehouse-blue/30 inline-block shadow-sm">
                 {user?.name || user?.picker_id}
