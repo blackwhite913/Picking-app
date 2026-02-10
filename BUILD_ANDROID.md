@@ -53,6 +53,31 @@ cd android && ./gradlew --version && cd ..
 
 ---
 
+## Quick Start: GitHub Actions Cloud Build
+
+Don't want to install Java/Android SDK locally? Use the automated GitHub Actions workflow to build in the cloud:
+
+### Steps:
+
+1. **Push code to GitHub** (workflow already exists at `.github/workflows/build-android.yml`)
+2. Go to your repository's **Actions** tab
+3. Click **"Build Android APK"** workflow
+4. Click **"Run workflow"** → **"Run workflow"**
+5. Wait ~5 minutes for build to complete
+6. Download APK from the **"Artifacts"** section (warehouse-picker-debug-apk)
+7. Extract the ZIP file to get `app-debug.apk`
+8. Upload to Google Drive/Dropbox and share with Zebra devices
+
+**Benefits:**
+- ✅ No local Java/Android SDK installation required
+- ✅ Consistent build environment
+- ✅ Build from any machine
+- ✅ Free for public repositories
+
+**Note:** The workflow configuration is already set up in `.github/workflows/build-android.yml` and will build automatically on pushes to main/master branches, or can be triggered manually.
+
+---
+
 ## Building the APK
 
 ### Step 1: Install Dependencies

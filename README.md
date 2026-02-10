@@ -1,14 +1,9 @@
 # Warehouse Picking Mobile App
 
-Progressive Web App (PWA) and Native Android App for warehouse batch picking operations, optimized for Zebra TC21 devices.
+Native Android App for warehouse batch picking operations, optimized for Zebra TC21 devices with full DataWedge scanner integration.
 
-> **📱 New: Native Android APK Available!**  
-> This app can now be deployed as a native Android APK with full Zebra DataWedge integration.
->
-> **Quick Start:**
-> - **Don't want to install Java?** → See [GET_APK.md](./GET_APK.md) - Build in the cloud with GitHub Actions!
-> - **Have Java installed?** → See [BUILD_ANDROID.md](./BUILD_ANDROID.md) - Build locally
-> - **Need technical details?** → See [ANDROID_CONVERSION_SUMMARY.md](./ANDROID_CONVERSION_SUMMARY.md)
+> **📱 Production Android APK**  
+> This app is deployed as a native Android APK. See [BUILD_ANDROID.md](./BUILD_ANDROID.md) for complete build and deployment instructions
 
 ## Features
 
@@ -73,71 +68,18 @@ The app will be available at `http://localhost:3000`
 
 ## Building for Production
 
-### Web/PWA Build
-
-```bash
-npm run build
-```
-
-The build output will be in the `dist` folder.
-
 ### Native Android APK
 
-For Zebra TC21 and other enterprise Android devices:
-
-```bash
-npm run android:build
-```
-
-Output: `android/app/build/outputs/apk/debug/app-debug.apk`
-
-**Full instructions:** See [BUILD_ANDROID.md](./BUILD_ANDROID.md) for:
-- Prerequisites (Java, Android SDK)
-- Building debug/release APKs
-- Installing via ADB or Zebra StageNow
+For Zebra TC21 and other enterprise Android devices, see [BUILD_ANDROID.md](./BUILD_ANDROID.md) for complete build and deployment instructions including:
+- Local builds with Java/Android SDK
+- Cloud builds via GitHub Actions (no local setup required)
+- Installation methods (ADB, direct transfer)
 - DataWedge configuration for scanner integration
-- Troubleshooting guide
+- Comprehensive troubleshooting guide
 
 ## Deployment
 
-### Option 1: Vercel (Recommended)
-
-1. Install Vercel CLI:
-```bash
-npm install -g vercel
-```
-
-2. Deploy:
-```bash
-vercel
-```
-
-3. Set environment variable in Vercel dashboard:
-   - `VITE_API_BASE_URL`: Your production API URL
-
-### Option 2: Netlify
-
-1. Build the app:
-```bash
-npm run build
-```
-
-2. Deploy the `dist` folder to Netlify
-
-3. Configure environment variables in Netlify settings
-
-### Option 3: Your Own Server
-
-1. Build:
-```bash
-npm run build
-```
-
-2. Serve with any static file server:
-```bash
-npm install -g serve
-serve -s dist -p 3000
-```
+This is a native Android APK application. See [BUILD_ANDROID.md](./BUILD_ANDROID.md) for deployment to Zebra TC21 devices.
 
 ## Backend API Requirements
 
@@ -196,9 +138,7 @@ The app expects these endpoints:
 
 ## Zebra TC21 Setup
 
-### For Native Android APK (Recommended)
-
-See [BUILD_ANDROID.md](./BUILD_ANDROID.md) for complete DataWedge configuration with intent-based scanning.
+The app uses DataWedge for barcode scanner integration. Complete configuration instructions are in [BUILD_ANDROID.md](./BUILD_ANDROID.md).
 
 **Quick reference:**
 - Profile: `WarehousePicking`
@@ -206,19 +146,6 @@ See [BUILD_ANDROID.md](./BUILD_ANDROID.md) for complete DataWedge configuration 
 - Intent Action: `com.warehouse.picker.SCAN`
 - Intent Delivery: Broadcast intent
 - Keystroke Output: **Disabled**
-
-### For PWA (Browser Mode)
-
-1. Open DataWedge on the Zebra device
-2. Create new profile: "WarehousePicking"
-3. Configure:
-   - **Input**: Scanner enabled, all barcode types
-   - **Output**: Keystroke output (keyboard wedge mode)
-   - **Intent Output**: Disabled
-
-4. Associate with browser app
-
-### Testing Barcode Scanner
 
 The app includes a "Simulate Scan" button for testing without a physical scanner.
 
@@ -283,11 +210,6 @@ Currently supports `D-G-1-C` format. To customize, edit the location display in 
 - Check `.env` file has correct API URL
 - Ensure backend is running
 - Check CORS settings on backend
-
-### PWA Not Installing
-- Must be served over HTTPS (except localhost)
-- Check manifest.json is accessible
-- Check service worker registration
 
 ### Barcode Scanner Not Working
 - Verify DataWedge configuration
