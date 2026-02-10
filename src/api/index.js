@@ -3,6 +3,13 @@ import axios from 'axios';
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
 
+// #region agent log
+// Debug: Log the actual API URL being used
+console.log('[DEBUG] API_BASE_URL:', API_BASE_URL);
+console.log('[DEBUG] import.meta.env.VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
+console.log('[DEBUG] All import.meta.env:', import.meta.env);
+// #endregion
+
 // Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
