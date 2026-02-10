@@ -37,7 +37,22 @@ export default function Login() {
     const actualBaseURL = apiModule.default.defaults.baseURL;
     console.log('[DEBUG] Actual API baseURL:', actualBaseURL);
     console.log('[DEBUG] Environment:', import.meta.env.MODE);
-    setDebugInfo(`API URL: ${actualBaseURL} | Env: ${import.meta.env.MODE}`);
+    
+    // Hypothesis D: Test if we can reach the backend at all
+    let networkTest = 'Testing...';
+    try {
+      const testResponse = await fetch(`${actualBaseURL}/health`, { 
+        method: 'GET',
+        signal: AbortSignal.timeout(5000)
+      });
+      networkTest = `Reachable (${testResponse.status})`;
+      console.log('[DEBUG] Network test successful:', testResponse.status);
+    } catch (testErr) {
+      networkTest = `Failed: ${testErr.message}`;
+      console.log('[DEBUG] Network test failed:', testErr);
+    }
+    
+    setDebugInfo(`URL: ${actualBaseURL} | Test: ${networkTest}`);
     // #endregion
 
     try {
