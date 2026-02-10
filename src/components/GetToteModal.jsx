@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Package, X } from 'lucide-react';
 import { scannerService } from '../services/scanner';
 
@@ -57,7 +57,7 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = useCallback((e) => {
     e?.preventDefault();
     
     if (!toteBarcode.trim()) {
@@ -82,7 +82,7 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
     }
 
     onConfirm(toteBarcode.trim());
-  };
+  }, [toteBarcode, expectedTote, onConfirm]);
 
   // Auto-submit when barcode entered (after scanner adds it)
   useEffect(() => {
@@ -93,7 +93,7 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [toteBarcode]);
+  }, [toteBarcode, handleSubmit]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
