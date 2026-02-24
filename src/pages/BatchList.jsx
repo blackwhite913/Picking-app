@@ -12,6 +12,12 @@ const PRIORITY_CONFIG = {
 };
 
 export default function BatchList() {
+  if (import.meta.env.DEV) {
+    // #region agent log
+    fetch('http://127.0.0.1:7288/ingest/6f7b4d02-d61c-4f1d-8ac9-ac4f4b312881',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'845059'},body:JSON.stringify({sessionId:'845059',runId:'run5',hypothesisId:'N5',location:'src/pages/BatchList.jsx:15',message:'BatchList function entered',data:{pathname:window.location.pathname},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+  }
+
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
@@ -24,6 +30,11 @@ export default function BatchList() {
   const [sortBy, setSortBy] = useState('PRIORITY'); // PRIORITY, DATE
 
   useEffect(() => {
+    if (import.meta.env.DEV) {
+      // #region agent log
+      fetch('http://127.0.0.1:7288/ingest/6f7b4d02-d61c-4f1d-8ac9-ac4f4b312881',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'845059'},body:JSON.stringify({sessionId:'845059',runId:'run5',hypothesisId:'N5',location:'src/pages/BatchList.jsx:31',message:'BatchList useEffect triggered',data:{locationKey:location.key||null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+    }
     window.scrollTo(0, 0); // Force scroll to top on load
     loadBatches();
   }, [location.key]); // Refresh whenever location changes (e.g. returning from picking)
@@ -32,9 +43,24 @@ export default function BatchList() {
     try {
       setLoading(true);
       setError('');
+      if (import.meta.env.DEV) {
+        // #region agent log
+        fetch('http://127.0.0.1:7288/ingest/6f7b4d02-d61c-4f1d-8ac9-ac4f4b312881',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'845059'},body:JSON.stringify({sessionId:'845059',runId:'run4',hypothesisId:'N3',location:'src/pages/BatchList.jsx:36',message:'loadBatches started',data:{pathname:window.location.pathname,userId:user?.id||null,pickerId:user?.picker_id||null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+      }
       const response = await batchAPI.getMyBatches();
+      if (import.meta.env.DEV) {
+        // #region agent log
+        fetch('http://127.0.0.1:7288/ingest/6f7b4d02-d61c-4f1d-8ac9-ac4f4b312881',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'845059'},body:JSON.stringify({sessionId:'845059',runId:'run4',hypothesisId:'N3',location:'src/pages/BatchList.jsx:42',message:'loadBatches success',data:{isArray:Array.isArray(response.data),count:Array.isArray(response.data)?response.data.length:null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+      }
       setBatches(response.data || []);
     } catch (err) {
+      if (import.meta.env.DEV) {
+        // #region agent log
+        fetch('http://127.0.0.1:7288/ingest/6f7b4d02-d61c-4f1d-8ac9-ac4f4b312881',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'845059'},body:JSON.stringify({sessionId:'845059',runId:'run4',hypothesisId:'N3',location:'src/pages/BatchList.jsx:49',message:'loadBatches error',data:{status:err?.response?.status||null,message:err?.response?.data?.message||err?.message||'unknown',url:err?.config?.url||null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+      }
       setError(err.response?.data?.message || 'Failed to load batches');
     } finally {
       setLoading(false);

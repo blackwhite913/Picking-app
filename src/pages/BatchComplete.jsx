@@ -1,12 +1,42 @@
 
+import { useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { CheckCircle, Package, AlertCircle } from 'lucide-react';
+import { CheckCircle, Package, AlertCircle, MapPin } from 'lucide-react';
+import { useBatchStore } from '../store';
 
 export default function BatchComplete() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { currentBatch } = useBatchStore();
 
   const { productionCount = 0, finalFindCount = 0 } = location.state || {};
+
+  const destinations = useMemo(() => {
+    try {
+      return Array.from(new Set(
+        (currentBatch?.orders || [])
+          .map(o => o.manualDestination?.trim())
+          .filter(Boolean)
+      ));
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        // #region agent log
+        fetch('http://127.0.0.1:7288/ingest/6f7b4d02-d61c-4f1d-8ac9-ac4f4b312881',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'845059'},body:JSON.stringify({sessionId:'845059',runId:'run3',hypothesisId:'N2',location:'src/pages/BatchComplete.jsx:15',message:'BatchComplete destination aggregation crashed',data:{ordersCount:currentBatch?.orders?.length||0,firstManualDestinationType:typeof currentBatch?.orders?.[0]?.manualDestination,errorMessage:String(err?.message||err)},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+      }
+      throw err;
+    }
+  }, [currentBatch]);
+
+  const destinationText = destinations.length === 0
+    ? 'No destination set'
+    : destinations.join(', ');
+
+  if (import.meta.env.DEV) {
+    // #region agent log
+    fetch('http://127.0.0.1:7288/ingest/6f7b4d02-d61c-4f1d-8ac9-ac4f4b312881',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'845059'},body:JSON.stringify({sessionId:'845059',runId:'run1',hypothesisId:'H3',location:'src/pages/BatchComplete.jsx:20',message:'BatchComplete render',data:{ordersCount:currentBatch?.orders?.length||0,destinationsCount:destinations.length,destinationText},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+  }
 
   return (
     <div className="flex min-h-full bg-warehouse-bg flex-col items-center justify-center p-6">
@@ -48,6 +78,15 @@ export default function BatchComplete() {
             <p className="text-warehouse-gray-light text-sm">totes need attention</p>
           </div>
         )}
+      </div>
+
+      {/* Destination Block */}
+      <div className="w-full max-w-md bg-warehouse-gray-dark border-2 border-warehouse-yellow rounded-lg p-4 mb-4">
+        <div className="flex items-center space-x-2 mb-1">
+          <MapPin className="text-warehouse-yellow" size={16} />
+          <p className="text-warehouse-gray-light text-xs font-semibold tracking-widest">DESTINATION</p>
+        </div>
+        <p className="text-warehouse-yellow text-xl font-bold break-words">{destinationText}</p>
       </div>
 
       {/* Actions */}

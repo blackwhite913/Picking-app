@@ -80,6 +80,17 @@ export default function PickingScreen() {
       setLoading(true);
       batchAPI.getBatchDetails(batchId)
         .then(response => {
+          if (import.meta.env.DEV) {
+            const d = response.data;
+            console.log('[DEV] getBatchDetails', { batchId, ordersCount: d.orders?.length });
+            d.orders?.slice(0, 3).forEach(o =>
+              console.log('[DEV] order sample', {
+                orderNumber: o.orderNumber,
+                manualDestination: o.manualDestination,
+                pickLocation: o.pickLocation,
+              })
+            );
+          }
           setBatch(response.data);
           setLoading(false);
         })

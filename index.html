@@ -17,6 +17,67 @@
 
 <body>
   <div id="root"></div>
+  <script>
+    // #region agent log
+    (function () {
+      const endpoint = 'http://127.0.0.1:7288/ingest/6f7b4d02-d61c-4f1d-8ac9-ac4f4b312881';
+      const basePayload = {
+        sessionId: '845059',
+        runId: 'run2',
+        hypothesisId: 'H6',
+        timestamp: Date.now()
+      };
+
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '845059' },
+        body: JSON.stringify({
+          ...basePayload,
+          location: 'index.html:22',
+          message: 'Index bootstrap script executed',
+          data: { href: window.location.href }
+        })
+      }).catch(() => { });
+
+      window.addEventListener('error', function (event) {
+        fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '845059' },
+          body: JSON.stringify({
+            ...basePayload,
+            hypothesisId: 'H4',
+            location: 'index.html:34',
+            message: 'Early window error',
+            data: {
+              message: event.message || null,
+              filename: event.filename || null,
+              lineno: event.lineno || null,
+              colno: event.colno || null
+            },
+            timestamp: Date.now()
+          })
+        }).catch(() => { });
+      });
+
+      window.addEventListener('unhandledrejection', function (event) {
+        fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '845059' },
+          body: JSON.stringify({
+            ...basePayload,
+            hypothesisId: 'H5',
+            location: 'index.html:53',
+            message: 'Early unhandled rejection',
+            data: {
+              reason: String(event.reason || 'unknown')
+            },
+            timestamp: Date.now()
+          })
+        }).catch(() => { });
+      });
+    })();
+    // #endregion
+  </script>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 

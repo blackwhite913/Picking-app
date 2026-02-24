@@ -58,6 +58,27 @@ export default function OrderCard({
     }
   };
 
+  let destinationValue = '—';
+  try {
+    destinationValue =
+      order.manualDestination?.trim() ||
+      item.pick_location?.trim() ||
+      '—';
+  } catch (err) {
+    if (import.meta.env.DEV) {
+      // #region agent log
+      fetch('http://127.0.0.1:7288/ingest/6f7b4d02-d61c-4f1d-8ac9-ac4f4b312881',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'845059'},body:JSON.stringify({sessionId:'845059',runId:'run3',hypothesisId:'N1',location:'src/components/OrderCard.jsx:66',message:'Destination render crashed',data:{manualDestinationType:typeof order.manualDestination,pickLocationType:typeof item.pick_location,errorMessage:String(err?.message||err)},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+    }
+    throw err;
+  }
+
+  if (import.meta.env.DEV && isActive) {
+    // #region agent log
+    fetch('http://127.0.0.1:7288/ingest/6f7b4d02-d61c-4f1d-8ac9-ac4f4b312881',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'845059'},body:JSON.stringify({sessionId:'845059',runId:'run3',hypothesisId:'N1',location:'src/components/OrderCard.jsx:74',message:'Active order destination types',data:{orderNumber:order.orderNumber,manualDestinationType:typeof order.manualDestination,pickLocationType:typeof item.pick_location,destinationValue},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+  }
+
   return (
     <div
       className={`border-2 ${statusConfig.color} ${statusConfig.bgColor} rounded-lg p-3 ${isActive ? 'ring-2 ring-warehouse-blue' : 'opacity-75'
@@ -77,6 +98,14 @@ export default function OrderCard({
             <AlertCircle size={14} className="text-warehouse-red" />
           )}
         </div>
+      </div>
+
+      {/* Destination */}
+      <div className="mb-2">
+        <span className="text-warehouse-gray-light text-xs">DEST: </span>
+        <span className="text-white text-xs font-semibold">
+          {destinationValue}
+        </span>
       </div>
 
       {/* Compact Quantity Display */}

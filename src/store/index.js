@@ -334,6 +334,7 @@ function convertLocationGroupsToLocations(locationGroupsData) {
             customer: item.customerName,
             toteNumber: item.toteNumber,
             toteBarcode: item.toteBarcode,
+            manualDestination: item.manualDestination ?? null,
             priority: 'normal',
             items: []
           };

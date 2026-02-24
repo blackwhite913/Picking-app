@@ -1,14 +1,17 @@
 import axios from 'axios';
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// #region agent log
-// Debug: Log the actual API URL being used
-console.log('[DEBUG] API_BASE_URL:', API_BASE_URL);
-console.log('[DEBUG] import.meta.env.VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
-console.log('[DEBUG] All import.meta.env:', import.meta.env);
-// #endregion
+if (!API_BASE_URL) {
+  console.warn('[API] VITE_API_BASE_URL is not set. All requests will fail. Create .env.local with the correct backend URL.');
+}
+
+if (import.meta.env.DEV) {
+  // #region agent log
+  fetch('http://127.0.0.1:7288/ingest/6f7b4d02-d61c-4f1d-8ac9-ac4f4b312881',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'845059'},body:JSON.stringify({sessionId:'845059',runId:'run1',hypothesisId:'H1',location:'src/api/index.js:11',message:'API module initialized',data:{apiBaseUrl:API_BASE_URL||null,hasApiBaseUrl:!!API_BASE_URL},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+}
 
 // Create axios instance
 const api = axios.create({
@@ -22,6 +25,10 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
+    if (import.meta.env.DEV) {
+      const fullUrl = `${config.baseURL || ''}${config.url || ''}`;
+      console.log("Full Request URL:", fullUrl);
+    }
     const token = localStorage.getItem('auth_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -37,6 +44,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (import.meta.env.DEV) {
+      // #region agent log
+      fetch('http://127.0.0.1:7288/ingest/6f7b4d02-d61c-4f1d-8ac9-ac4f4b312881',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'845059'},body:JSON.stringify({sessionId:'845059',runId:'run4',hypothesisId:'N4',location:'src/api/index.js:43',message:'API response error',data:{url:error?.config?.url||null,method:error?.config?.method||null,status:error?.response?.status||null,apiMessage:error?.response?.data?.message||null,isNetworkError:!!error?.message&&error.message.includes('Network Error')},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+    }
+
     // Don't redirect if we're already on login page or if the error came from a login request
     const isLoginRequest = error.config?.url?.includes('/auth/login');
 
