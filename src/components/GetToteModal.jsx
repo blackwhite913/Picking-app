@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Package, X } from 'lucide-react';
 import { scannerService } from '../services/scanner';
+import { normalizeToteBarcode } from '../utils/normalizeToteBarcode';
 
 export default function GetToteModal({ orderNumber, customer, expectedTote, onConfirm, onClose }) {
   const [toteBarcode, setToteBarcode] = useState('');
@@ -61,29 +62,35 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
 
   const handleSubmit = useCallback((e) => {
     e?.preventDefault();
-    
-    if (!toteBarcode.trim()) {
-      setError('Please scan or enter a tote barcode');
+
+    const normalized = normalizeToteBarcode(toteBarcode);
+
+    if (!normalized) {
+      setError('Invalid tote barcode');
       return;
     }
 
-    // If expectedTote exists, validate it matches
-    if (expectedTote && toteBarcode.trim().toUpperCase() !== expectedTote.toUpperCase()) {
-      setError(`Wrong tote! Expected: ${expectedTote}`);
-      
-      // Auto-clear the input after 2 seconds to allow rescanning
-      if (errorTimeoutRef.current) {
-        clearTimeout(errorTimeoutRef.current);
+    // If expectedTote exists, validate it matches (using normalized values)
+    if (expectedTote) {
+      const expectedNormalized = normalizeToteBarcode(expectedTote);
+
+      if (!expectedNormalized || normalized !== expectedNormalized) {
+        setError(`Wrong tote! Expected: ${expectedTote}`);
+
+        // Auto-clear the input after 2 seconds to allow rescanning
+        if (errorTimeoutRef.current) {
+          clearTimeout(errorTimeoutRef.current);
+        }
+        errorTimeoutRef.current = setTimeout(() => {
+          setToteBarcode('');
+          setError('');
+        }, 2000);
+
+        return;
       }
-      errorTimeoutRef.current = setTimeout(() => {
-        setToteBarcode('');
-        setError('');
-      }, 2000);
-      
-      return;
     }
 
-    onConfirm(toteBarcode.trim());
+    onConfirm(normalized);
   }, [toteBarcode, expectedTote, onConfirm]);
 
   // Auto-submit when barcode entered from scanner (not manual typing)

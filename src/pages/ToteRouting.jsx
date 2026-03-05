@@ -4,6 +4,7 @@ import { useBatchStore, useToteStore } from '../store';
 import { pickingAPI, batchAPI } from '../api';
 import { Package, CheckCircle, AlertCircle, ChevronLeft } from 'lucide-react';
 import { scannerService } from '../services/scanner';
+import { normalizeToteBarcode } from '../utils/normalizeToteBarcode';
 
 export default function ToteRouting() {
   const { batchId } = useParams();
@@ -99,7 +100,8 @@ export default function ToteRouting() {
     if (currentBatch?.totes) {
       currentBatch.totes.forEach(tote => {
         if (tote.orderId) {
-          finalToteMap[tote.orderId] = tote.toteBarcode;
+          const normalized = normalizeToteBarcode(tote.toteBarcode);
+          finalToteMap[tote.orderId] = normalized || tote.toteBarcode;
         }
       });
     }
@@ -108,7 +110,8 @@ export default function ToteRouting() {
     if (toteAssignments) {
       Object.entries(toteAssignments).forEach(([orderId, data]) => {
         if (data?.toteBarcode) {
-          finalToteMap[orderId] = data.toteBarcode;
+          const normalized = normalizeToteBarcode(data.toteBarcode);
+          finalToteMap[orderId] = normalized || data.toteBarcode;
         }
       });
     }
@@ -190,6 +193,8 @@ export default function ToteRouting() {
     const cleanInput = input.trim().toUpperCase();
     if (!cleanInput) return;
 
+    const normalizedScan = normalizeToteBarcode(input);
+
     // SCENARIO 1: We are waiting for a Location (Active Tote is selected)
     if (activeTote) {
       console.log(`[Sequential] Active Tote ${activeTote.identifier} selected. Input is assumed Location: ${cleanInput}`);
@@ -230,9 +235,16 @@ export default function ToteRouting() {
     // Check if input matches a known tote
     const allTotes = [...totes.production, ...totes.finalFind];
     const matchedTote = allTotes.find(t => {
-      const tBarcode = t.toteBarcode ? t.toteBarcode.toUpperCase() : '';
+      const normalizedTote = t.toteBarcode ? normalizeToteBarcode(t.toteBarcode) : null;
       const tGenerated = `TOTE-${t.orderId.substring(0, 8)}`.toUpperCase();
-      return cleanInput === tBarcode || cleanInput === tGenerated || cleanInput === t.orderId;
+
+      // Prefer normalized barcode matching when both sides normalize
+      if (normalizedScan && normalizedTote && normalizedScan === normalizedTote) {
+        return true;
+      }
+
+      // Preserve existing behavior: allow matching against generated ID and raw orderId
+      return cleanInput === tGenerated || cleanInput === t.orderId;
     });
 
     if (matchedTote) {
@@ -243,8 +255,13 @@ export default function ToteRouting() {
       }
 
       console.log(`[Sequential] Matched Tote:`, matchedTote);
+
+      const identifierFromTote = matchedTote.toteBarcode
+        ? normalizeToteBarcode(matchedTote.toteBarcode) || matchedTote.toteBarcode
+        : `TOTE-${matchedTote.orderId.substring(0, 8)}`;
+
       setActiveTote({
-        identifier: matchedTote.toteBarcode || `TOTE-${matchedTote.orderId.substring(0, 8)}`,
+        identifier: identifierFromTote,
         orderId: matchedTote.orderId,
         destination: matchedTote.hasIssues ? 'manager' : 'production'
       });
@@ -258,8 +275,12 @@ export default function ToteRouting() {
   };
 
   const handleManualSelect = (tote) => {
+    const identifier = tote.toteBarcode
+      ? normalizeToteBarcode(tote.toteBarcode) || tote.toteBarcode
+      : `TOTE-${tote.orderId.substring(0, 8)}`;
+
     setActiveTote({
-      identifier: tote.toteBarcode || `TOTE-${tote.orderId.substring(0, 8)}`,
+      identifier,
       orderId: tote.orderId,
       destination: tote.hasIssues ? 'manager' : 'production'
     });
