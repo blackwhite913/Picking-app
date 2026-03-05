@@ -8,8 +8,6 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
   const inputRef = useRef(null);
   const errorTimeoutRef = useRef(null);
 
-  // Do NOT auto-focus the input on mount to avoid opening the soft keyboard on scanning devices.
-
   useEffect(() => {
     // Clear any pending error timeout on unmount
     return () => {
@@ -105,6 +103,7 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
                        focus:outline-none text-lg"
               placeholder="TOTE-123"
               autoComplete="off"
+              autoFocus
             />
           </div>
 
@@ -117,9 +116,7 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
           <button
             type="submit"
             className="w-full py-3 bg-warehouse-blue text-white rounded-lg font-bold 
-                     hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 
-                     disabled:cursor-not-allowed"
-            disabled={!normalizeToteBarcode(toteBarcode)}
+                     hover:bg-blue-600 active:bg-blue-700"
           >
             Continue
           </button>
