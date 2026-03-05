@@ -8,6 +8,7 @@ import OrderCard from '../components/OrderCard';
 import ConfirmModal from '../components/ConfirmModal';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { scannerService } from '../services/scanner';
+import { appLog } from '../utils/appLogger';
 export default function PickingScreen() {
   const { batchId } = useParams();
   const navigate = useNavigate();
@@ -363,6 +364,9 @@ export default function PickingScreen() {
       lastKeyTime.current = now;
 
       if (char === 'Enter' || e.keyCode === 10) {
+        // #region agent log
+        appLog.info('PickingScreen:globalKeyDown', 'Flush trigger received', { char, keyCode: e.keyCode, bufferLen: scanBuffer.current.length, buffer: scanBuffer.current, showToteModal });
+        // #endregion
         if (scanBuffer.current.length > 0) {
           console.log('[GlobalScan] Buffer Flush:', scanBuffer.current);
           // Route through scanner service for unified handling
@@ -390,6 +394,9 @@ export default function PickingScreen() {
 
     if (e.key === 'Enter' || e.keyCode === 10) {
       const val = e.target.value.trim();
+      // #region agent log
+      appLog.info('PickingScreen:scannerKeyDown', 'Enter/LF on hidden input', { key: e.key, keyCode: e.keyCode, val, isEmpty: !val });
+      // #endregion
       console.log('[InputScan] Enter pressed. Value:', val);
 
       if (val && val.length > 0) {
@@ -557,6 +564,9 @@ export default function PickingScreen() {
 
 
   const handleGetTote = async (toteBarcode) => {
+    // #region agent log
+    appLog.info('PickingScreen:handleGetTote', 'Called with tote barcode', { toteBarcode, activeOrderTote: activeOrder?.toteBarcode });
+    // #endregion
     try {
       setLoading(true);
       setError('');
@@ -564,6 +574,7 @@ export default function PickingScreen() {
       // If verifying an existing tote, store locally without hitting the API
       if (activeOrder.toteBarcode) {
         if (activeOrder.toteBarcode === toteBarcode) {
+          appLog.info('PickingScreen:handleGetTote', 'Matched existing tote locally — skipping API', { toteBarcode });
           setToteAssignment(activeOrder.orderId, toteBarcode);
           setShowToteModal(false);
           setLoading(false);
@@ -571,15 +582,18 @@ export default function PickingScreen() {
         }
       }
 
+      appLog.info('PickingScreen:handleGetTote', 'Calling getToteForOrder API', { toteBarcode, batchId, orderId: activeOrder?.orderId });
       const response = await pickingAPI.getToteForOrder(batchId, activeOrder.orderId, { toteBarcode });
 
       const returnedToteBarcode = response.data.toteBarcode || toteBarcode;
+      appLog.info('PickingScreen:handleGetTote', 'API success', { returnedToteBarcode });
 
       setToteAssignment(activeOrder.orderId, returnedToteBarcode);
 
       setShowToteModal(false);
       setLoading(false); // Ensure loading is set to false to enable picking controls
     } catch (err) {
+      appLog.error('PickingScreen:handleGetTote', 'API error', { message: err.response?.data?.message || err.message });
       setError(err.response?.data?.message || 'Failed to assign tote');
       setLoading(false); // Also set loading to false on error
     }

@@ -1,30 +1,54 @@
 import { useState, useRef, useEffect } from 'react';
 import { Package, X } from 'lucide-react';
 import { scannerService } from '../services/scanner';
+import { appLog } from '../utils/appLogger';
 
 export default function GetToteModal({ orderNumber, customer, expectedTote, onConfirm, onClose }) {
   const [toteBarcode, setToteBarcode] = useState('');
   const inputRef = useRef(null);
 
   useEffect(() => {
+    appLog.info('GetToteModal', 'Modal mounted', { orderNumber, expectedTote });
+    const focused = !!inputRef.current;
     inputRef.current?.focus();
+    const activeTag = document.activeElement?.tagName;
+    const isOurInput = document.activeElement === inputRef.current;
+    appLog.info('GetToteModal', 'Focus attempt result', { focused, activeTag, isOurInput });
   }, []);
 
   useEffect(() => {
+    appLog.info('GetToteModal', 'Subscribing to scannerService');
     const unsubscribe = scannerService.addListener((scanData) => {
+      // #region agent log
+      appLog.info('GetToteModal:scannerListener', 'Scan received via scannerService', {
+        barcode: scanData.barcode,
+        source: scanData.source,
+        trimmed: scanData.barcode?.trim(),
+      });
+      // #endregion
       const value = scanData.barcode?.trim();
       if (value) {
+        appLog.info('GetToteModal:scannerListener', 'Calling onConfirm from scanner listener', { value });
         onConfirm(value);
+      } else {
+        appLog.warn('GetToteModal:scannerListener', 'Scan received but value was empty after trim', { raw: scanData.barcode });
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      appLog.info('GetToteModal', 'Unsubscribing from scannerService');
+      unsubscribe();
+    };
   }, [onConfirm]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const value = toteBarcode?.trim();
+    // #region agent log
+    appLog.info('GetToteModal:handleSubmit', 'Form submit triggered', { rawToteBarcode: toteBarcode, trimmed: value, isEmpty: !value });
+    // #endregion
     if (!value) return;
+    appLog.info('GetToteModal:handleSubmit', 'Calling onConfirm from form submit', { value });
     onConfirm(value);
     setToteBarcode('');
   };
@@ -75,6 +99,15 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
               value={toteBarcode}
               onChange={(e) => setToteBarcode(e.target.value)}
               onKeyDown={(e) => {
+                // #region agent log
+                appLog.info('GetToteModal:input:onKeyDown', 'Key pressed in modal input', {
+                  key: e.key,
+                  keyCode: e.keyCode,
+                  currentValue: e.target.value,
+                  isEnter: e.key === 'Enter',
+                  isLF: e.keyCode === 10,
+                });
+                // #endregion
                 if (e.keyCode === 10) {
                   e.preventDefault();
                   handleSubmit(e);
