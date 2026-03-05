@@ -20,7 +20,10 @@ function log(level, location, message, data = {}) {
   };
   fetch(`${SERVER}/log`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'bypass-tunnel-reminder': 'true',
+    },
     body: JSON.stringify(entry),
   }).catch(() => {});
 }
