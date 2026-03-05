@@ -599,26 +599,6 @@ export default function PickingScreen() {
     }
   };
 
-        setShowToteModal(false);
-        setLoading(false);
-        return;
-      }
-
-      const response = await pickingAPI.getToteForOrder(batchId, activeOrder.orderId, { toteBarcode });
-
-      // Store tote assignment with barcode returned from backend
-      const returnedToteBarcode = response.data.toteBarcode;
-
-      setToteAssignment(activeOrder.orderId, returnedToteBarcode);
-
-      setShowToteModal(false);
-      setLoading(false); // Ensure loading is set to false to enable picking controls
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to assign tote');
-      setLoading(false); // Also set loading to false on error
-    }
-  };
-
   const handlePickOne = async () => {
     console.log('[PickingScreen] Pick 1 Triggered. ActiveItem:', activeItem);
     await handlePick(1, 'MANUAL');
