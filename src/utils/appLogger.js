@@ -6,7 +6,8 @@
  * Falls back silently if server is unreachable.
  */
 
-const SERVER = import.meta.env.VITE_LOG_SERVER || null;
+// Hardcoded for debug build — remove when debugging is done
+const SERVER = import.meta.env.VITE_LOG_SERVER || 'http://192.0.0.2:4000';
 
 function log(level, location, message, data = {}) {
   if (!SERVER) return;
