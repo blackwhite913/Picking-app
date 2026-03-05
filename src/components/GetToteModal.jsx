@@ -74,6 +74,12 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
               type="text"
               value={toteBarcode}
               onChange={(e) => setToteBarcode(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.keyCode === 10) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
               className="w-full px-4 py-3 bg-warehouse-gray-medium text-white rounded-lg 
                        border border-warehouse-gray-light focus:border-warehouse-blue 
                        focus:outline-none text-lg"

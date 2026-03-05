@@ -362,7 +362,7 @@ export default function PickingScreen() {
       }
       lastKeyTime.current = now;
 
-      if (char === 'Enter') {
+      if (char === 'Enter' || e.keyCode === 10) {
         if (scanBuffer.current.length > 0) {
           console.log('[GlobalScan] Buffer Flush:', scanBuffer.current);
           // Route through scanner service for unified handling
@@ -371,7 +371,7 @@ export default function PickingScreen() {
           scanBuffer.current = '';
           e.preventDefault();
         }
-      } else if (char.length === 1) {
+      } else if (char.length === 1 && e.keyCode !== 10) {
         scanBuffer.current += char;
       }
     };
@@ -388,7 +388,7 @@ export default function PickingScreen() {
   const handleScannerKeyDown = (e) => {
     console.log('[InputScan] KeyDown:', e.key, 'Value:', e.target.value);
 
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' || e.keyCode === 10) {
       const val = e.target.value.trim();
       console.log('[InputScan] Enter pressed. Value:', val);
 
