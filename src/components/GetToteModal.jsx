@@ -4,68 +4,40 @@ import { scannerService } from '../services/scanner';
 
 export default function GetToteModal({ orderNumber, customer, expectedTote, onConfirm, onClose }) {
   const [toteBarcode, setToteBarcode] = useState('');
-  const [debugLog, setDebugLog] = useState([]);
   const inputRef = useRef(null);
-  const debugRef = useRef(null);
-
-  const dbg = useCallback((msg) => {
-    const ts = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    setDebugLog(prev => [...prev.slice(-30), `[${ts}] ${msg}`]);
-  }, []);
 
   useEffect(() => {
-    if (debugRef.current) debugRef.current.scrollTop = debugRef.current.scrollHeight;
-  }, [debugLog]);
-
-  useEffect(() => {
-    dbg(`MOUNT orderNumber=${orderNumber} expectedTote=${expectedTote}`);
     inputRef.current?.focus();
-    const tag = document.activeElement?.tagName;
-    const ours = document.activeElement === inputRef.current;
-    dbg(`FOCUS tag=${tag} isOurInput=${ours}`);
   }, []);
 
   const onConfirmRef = useRef(onConfirm);
   useEffect(() => { onConfirmRef.current = onConfirm; }, [onConfirm]);
 
   useEffect(() => {
-    dbg('SUBSCRIBE scannerService');
     const unsubscribe = scannerService.addListener((scanData) => {
-      dbg(`SCANNER_EVENT barcode="${scanData.barcode}" src=${scanData.source}`);
       const value = scanData.barcode?.trim();
-      if (value) {
-        dbg(`SCANNER_CONFIRM → onConfirm("${value}")`);
-        onConfirmRef.current(value);
-      } else {
-        dbg(`SCANNER_EMPTY raw="${scanData.barcode}"`);
-      }
+      if (value) onConfirmRef.current(value);
     });
-    return () => { dbg('UNSUBSCRIBE'); unsubscribe(); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => unsubscribe();
   }, []);
 
   const confirmValue = useCallback((rawValue) => {
     const value = rawValue?.trim();
-    dbg(`CONFIRM_ATTEMPT raw="${rawValue}" trimmed="${value}" empty=${!value}`);
     if (!value) return;
-    dbg(`CONFIRM_OK → onConfirm("${value}")`);
     onConfirmRef.current(value);
     setToteBarcode('');
     if (inputRef.current) inputRef.current.value = '';
-  }, [dbg]);
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // By form submit time React has already reset the DOM to state "".
-    // Use toteBarcode state (typed manually) as the value here.
-    dbg(`SUBMIT state="${toteBarcode}"`);
     confirmValue(toteBarcode);
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-warehouse-gray-dark rounded-lg max-w-md w-full p-4 max-h-[95vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-3">
+      <div className="bg-warehouse-gray-dark rounded-lg max-w-md w-full p-6">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
             <Package className="text-warehouse-blue" size={24} />
             <h3 className="text-white text-xl font-bold">
@@ -77,8 +49,8 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
           </button>
         </div>
 
-        <div className="mb-3">
-          <p className="text-warehouse-gray-light mb-1">
+        <div className="mb-4">
+          <p className="text-warehouse-gray-light mb-2">
             Order: <span className="text-white font-semibold">{orderNumber}</span>
           </p>
           <p className="text-warehouse-gray-light">
@@ -87,7 +59,7 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
         </div>
 
         {expectedTote && (
-          <div className="mb-3 p-2 bg-warehouse-blue/20 border border-warehouse-blue rounded">
+          <div className="mb-4 p-3 bg-warehouse-blue/20 border border-warehouse-blue rounded">
             <p className="text-warehouse-blue text-sm font-semibold">
               Expected Tote: {expectedTote}
             </p>
@@ -95,32 +67,24 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <label className="block text-warehouse-gray-light text-sm mb-1">
+          <div className="mb-4">
+            <label className="block text-warehouse-gray-light text-sm mb-2">
               Scan or Enter Tote Barcode
             </label>
             <input
               ref={inputRef}
               type="text"
               value={toteBarcode}
-              onChange={(e) => {
-                setToteBarcode(e.target.value);
-                dbg(`INPUT val="${e.target.value}" len=${e.target.value.length}`);
-              }}
+              onChange={(e) => setToteBarcode(e.target.value)}
               onKeyDown={(e) => {
                 const isEnter = e.key === 'Enter' || e.keyCode === 13 || e.keyCode === 10;
-                dbg(`KEY key="${e.key}" code=${e.keyCode} val="${e.target.value}" isEnter=${isEnter}`);
                 if (isEnter) {
-                  // Read e.target.value NOW — React will reset DOM to state "" immediately after.
+                  // Capture e.target.value NOW — React controlled input resets DOM between keydown and submit.
                   const captured = e.target.value;
-                  dbg(`ENTER_CAPTURED val="${captured}"`);
                   e.preventDefault();
-                  // Prefer DOM value (scanner typed here); fall back to React state (manual typing).
                   confirmValue(captured || toteBarcode);
                 }
               }}
-              onFocus={() => dbg('INPUT_FOCUS')}
-              onBlur={() => dbg('INPUT_BLUR')}
               className="w-full px-4 py-3 bg-warehouse-gray-medium text-white rounded-lg 
                        border border-warehouse-gray-light focus:border-warehouse-blue 
                        focus:outline-none text-lg"
@@ -138,19 +102,15 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
           </button>
         </form>
 
-        {/* On-screen debug panel */}
-        <div className="mt-3 border border-yellow-500 rounded bg-black p-2">
-          <p className="text-yellow-400 text-xs font-bold mb-1">DEBUG LOG (on-device)</p>
-          <div
-            ref={debugRef}
-            className="text-green-400 text-[10px] font-mono leading-tight max-h-32 overflow-y-auto whitespace-pre-wrap"
-          >
-            {debugLog.length === 0
-              ? <span className="text-gray-500">Waiting for events...</span>
-              : debugLog.map((line, i) => <div key={i}>{line}</div>)
-            }
-          </div>
-        </div>
+        <button
+          onClick={() => {
+            const simulated = `TOTE-${Math.floor(Math.random() * 1000)}`;
+            setToteBarcode(simulated);
+          }}
+          className="w-full mt-2 py-2 text-warehouse-gray-light text-sm hover:text-white"
+        >
+          Simulate Scan (Testing)
+        </button>
       </div>
     </div>
   );
