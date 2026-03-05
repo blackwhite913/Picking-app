@@ -1,9 +1,25 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Package, X } from 'lucide-react';
+import { scannerService } from '../services/scanner';
 
 export default function GetToteModal({ orderNumber, customer, expectedTote, onConfirm, onClose }) {
   const [toteBarcode, setToteBarcode] = useState('');
   const inputRef = useRef(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = scannerService.addListener((scanData) => {
+      const value = scanData.barcode?.trim();
+      if (value) {
+        onConfirm(value);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [onConfirm]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -63,7 +79,6 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
                        focus:outline-none text-lg"
               placeholder="TOTE-123"
               autoComplete="off"
-              autoFocus
             />
           </div>
 
