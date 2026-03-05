@@ -1,66 +1,22 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Package, X } from 'lucide-react';
-import { scannerService } from '../services/scanner';
 import { normalizeToteBarcode } from '../utils/normalizeToteBarcode';
 
 export default function GetToteModal({ orderNumber, customer, expectedTote, onConfirm, onClose }) {
   const [toteBarcode, setToteBarcode] = useState('');
   const [error, setError] = useState('');
   const inputRef = useRef(null);
-  const scanBuffer = useRef('');
-  const lastKeyTime = useRef(0);
   const errorTimeoutRef = useRef(null);
-  const isFromScanner = useRef(false);
 
   // Do NOT auto-focus the input on mount to avoid opening the soft keyboard on scanning devices.
-  // Scanner input is captured by the scanner service and keyboard listener below.
 
-  // Scanner service listener for native DataWedge intents
   useEffect(() => {
-    const unsubscribe = scannerService.addListener((scanData) => {
-      console.log('[GetToteModal] Scan from scanner service:', scanData);
-      isFromScanner.current = true;
-      setToteBarcode('');
-      setTimeout(() => {
-        setToteBarcode(scanData.barcode);
-      }, 0);
-    });
-
+    // Clear any pending error timeout on unmount
     return () => {
-      unsubscribe();
-      // Clear any pending error timeout on unmount
       if (errorTimeoutRef.current) {
         clearTimeout(errorTimeoutRef.current);
       }
     };
-  }, []);
-
-  // Global keyboard scanner listener for modal (keyboard wedge fallback)
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      const now = Date.now();
-      
-      // Reset buffer if too much time passed
-      if (now - lastKeyTime.current > 500) {
-        scanBuffer.current = '';
-      }
-      lastKeyTime.current = now;
-
-      if (e.key === 'Enter') {
-        if (scanBuffer.current.length > 0) {
-          console.log('[GetToteModal] Keyboard scan:', scanBuffer.current);
-          // Route through scanner service for unified handling
-          scannerService.simulateScan(scanBuffer.current);
-          scanBuffer.current = '';
-          e.preventDefault();
-        }
-      } else if (e.key.length === 1) {
-        scanBuffer.current += e.key;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const handleSubmit = useCallback((e) => {
@@ -98,19 +54,6 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
 
     onConfirm(normalized);
   }, [toteBarcode, expectedTote, onConfirm]);
-
-  // Auto-submit when barcode entered from scanner (not manual typing)
-  useEffect(() => {
-    // Only auto-submit if input came from scanner, not manual typing
-    if (isFromScanner.current && toteBarcode && toteBarcode.length > 3) {
-      // Small delay to let user see the value
-      const timer = setTimeout(() => {
-        handleSubmit();
-        isFromScanner.current = false; // Reset flag
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [toteBarcode, handleSubmit]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
@@ -156,11 +99,7 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
               ref={inputRef}
               type="text"
               value={toteBarcode}
-              onChange={(e) => {
-                isFromScanner.current = false; // Manual typing, not scanner
-                setToteBarcode(e.target.value);
-                setError('');
-              }}
+              onChange={(e) => setToteBarcode(e.target.value)}
               className="w-full px-4 py-3 bg-warehouse-gray-medium text-white rounded-lg 
                        border border-warehouse-gray-light focus:border-warehouse-blue 
                        focus:outline-none text-lg"
