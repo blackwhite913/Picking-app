@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Allow cleartext HTTP to the local debug log server -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">192.0.0.2</domain>
+    </domain-config>
+    <!-- Default: all other traffic follows system default (HTTPS only) -->
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>
