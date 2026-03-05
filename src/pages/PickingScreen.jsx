@@ -8,6 +8,7 @@ import OrderCard from '../components/OrderCard';
 import ConfirmModal from '../components/ConfirmModal';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { scannerService } from '../services/scanner';
+import { normalizeToteBarcode } from '../utils/normalizeToteBarcode';
 
 export default function PickingScreen() {
   const { batchId } = useParams();
@@ -562,9 +563,42 @@ export default function PickingScreen() {
       setLoading(true);
       setError('');
 
+      const normalized = normalizeToteBarcode(toteBarcode);
+
+      if (!normalized) {
+        setError('Invalid tote barcode');
+        setLoading(false);
+        return;
+      }
+
       // If verifying an existing tote, we don't need to call the API to "get" it again, just store it locally
-      if (activeOrder.toteBarcode && activeOrder.toteBarcode === toteBarcode) {
-        setToteAssignment(activeOrder.orderId, toteBarcode);
+      if (activeOrder.toteBarcode) {
+        const existingNormalized = normalizeToteBarcode(activeOrder.toteBarcode);
+
+        if (existingNormalized && existingNormalized === normalized) {
+          setToteAssignment(activeOrder.orderId, normalized);
+          setShowToteModal(false);
+          setLoading(false);
+          return;
+        }
+      }
+
+      const response = await pickingAPI.getToteForOrder(batchId, activeOrder.orderId, { toteBarcode: normalized });
+
+      // Store tote assignment with barcode returned from backend (normalized if possible)
+      const returnedToteBarcode = response.data.toteBarcode;
+      const normalizedReturned = normalizeToteBarcode(returnedToteBarcode) || returnedToteBarcode;
+
+      setToteAssignment(activeOrder.orderId, normalizedReturned);
+
+      setShowToteModal(false);
+      setLoading(false); // Ensure loading is set to false to enable picking controls
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to assign tote');
+      setLoading(false); // Also set loading to false on error
+    }
+  };
+
         setShowToteModal(false);
         setLoading(false);
         return;
