@@ -1,11 +1,12 @@
 export function normalizeToteBarcode(input) {
   if (input == null) return null;
 
-  const trimmed = String(input).trim();
-  if (!trimmed) return null;
+  const cleaned = String(input)
+    .replace(/[\n\r\t]/g, '')
+    .trim()
+    .toUpperCase();
 
-  const upper = trimmed.toUpperCase();
-  const digits = upper.match(/\d+/g)?.join('') || '';
+  const digits = cleaned.replace(/\D/g, '');
 
   if (!digits) return null;
 

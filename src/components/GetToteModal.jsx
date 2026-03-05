@@ -63,6 +63,9 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
   const handleSubmit = useCallback((e) => {
     e?.preventDefault();
 
+    console.log('RAW SCAN VALUE:', JSON.stringify(toteBarcode));
+    console.log('NORMALIZED:', normalizeToteBarcode(toteBarcode));
+
     const normalized = normalizeToteBarcode(toteBarcode);
 
     if (!normalized) {
@@ -174,7 +177,7 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
             className="w-full py-3 bg-warehouse-blue text-white rounded-lg font-bold 
                      hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 
                      disabled:cursor-not-allowed"
-            disabled={!toteBarcode.trim()}
+            disabled={!normalizeToteBarcode(toteBarcode)}
           >
             Continue
           </button>
