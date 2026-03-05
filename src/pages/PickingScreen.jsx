@@ -393,6 +393,9 @@ export default function PickingScreen() {
     if (e.key === 'Enter') {
       const val = e.target.value.trim();
       console.log('[InputScan] Enter pressed. Value:', val);
+      // #region agent log
+      fetch('http://127.0.0.1:7611/ingest/22e6966d-bd41-49f7-ba36-f784c2b4eead',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'84b854'},body:JSON.stringify({sessionId:'84b854',location:'PickingScreen.jsx:handleScannerKeyDown',message:'hidden input intercepted ENTER',data:{val,showToteModal,isModalOpen},timestamp:Date.now(),hypothesisId:'H-D'})}).catch(()=>{});
+      // #endregion
 
       if (val && val.length > 0) {
         // Route through scanner service for unified handling
@@ -565,6 +568,10 @@ export default function PickingScreen() {
 
       const normalized = normalizeToteBarcode(toteBarcode);
 
+      // #region agent log
+      fetch('http://127.0.0.1:7611/ingest/22e6966d-bd41-49f7-ba36-f784c2b4eead',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'84b854'},body:JSON.stringify({sessionId:'84b854',location:'PickingScreen.jsx:handleGetTote',message:'handleGetTote called',data:{rawInput:toteBarcode,normalized,willBlock:!normalized,activeOrderTote:activeOrder?.toteBarcode},timestamp:Date.now(),hypothesisId:'H-A,H-B,H-C'})}).catch(()=>{});
+      // #endregion
+
       if (!normalized) {
         setError('Invalid tote barcode');
         setLoading(false);
@@ -574,6 +581,10 @@ export default function PickingScreen() {
       // If verifying an existing tote, we don't need to call the API to "get" it again, just store it locally
       if (activeOrder.toteBarcode) {
         const existingNormalized = normalizeToteBarcode(activeOrder.toteBarcode);
+
+        // #region agent log
+        fetch('http://127.0.0.1:7611/ingest/22e6966d-bd41-49f7-ba36-f784c2b4eead',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'84b854'},body:JSON.stringify({sessionId:'84b854',location:'PickingScreen.jsx:handleGetTote:existingCheck',message:'existing tote comparison',data:{existingNormalized,normalized,match:existingNormalized===normalized},timestamp:Date.now(),hypothesisId:'H-C'})}).catch(()=>{});
+        // #endregion
 
         if (existingNormalized && existingNormalized === normalized) {
           setToteAssignment(activeOrder.orderId, normalized);
