@@ -20,7 +20,10 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
     const unsubscribe = scannerService.addListener((scanData) => {
       console.log('[GetToteModal] Scan from scanner service:', scanData);
       isFromScanner.current = true;
-      setToteBarcode(scanData.barcode);
+      setToteBarcode('');
+      setTimeout(() => {
+        setToteBarcode(scanData.barcode);
+      }, 0);
     });
 
     return () => {

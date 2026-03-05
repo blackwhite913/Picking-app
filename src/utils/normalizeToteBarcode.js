@@ -1,5 +1,5 @@
 export function normalizeToteBarcode(input) {
-  if (input == null) return null;
+  if (!input) return null;
 
   const cleaned = String(input)
     .replace(/[\n\r\t]/g, '')
