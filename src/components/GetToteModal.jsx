@@ -25,6 +25,9 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
     dbg(`FOCUS tag=${tag} isOurInput=${ours}`);
   }, []);
 
+  const onConfirmRef = useRef(onConfirm);
+  useEffect(() => { onConfirmRef.current = onConfirm; }, [onConfirm]);
+
   useEffect(() => {
     dbg('SUBSCRIBE scannerService');
     const unsubscribe = scannerService.addListener((scanData) => {
@@ -32,22 +35,27 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
       const value = scanData.barcode?.trim();
       if (value) {
         dbg(`SCANNER_CONFIRM → onConfirm("${value}")`);
-        onConfirm(value);
+        onConfirmRef.current(value);
       } else {
         dbg(`SCANNER_EMPTY raw="${scanData.barcode}"`);
       }
     });
     return () => { dbg('UNSUBSCRIBE'); unsubscribe(); };
-  }, [onConfirm, dbg]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const value = toteBarcode?.trim();
-    dbg(`SUBMIT raw="${toteBarcode}" trimmed="${value}" empty=${!value}`);
+    // Scanner types directly into DOM, bypassing React onChange.
+    // React state (toteBarcode) stays empty — read DOM value as fallback.
+    const domValue = inputRef.current?.value || '';
+    const value = (toteBarcode || domValue).trim();
+    dbg(`SUBMIT state="${toteBarcode}" dom="${domValue}" used="${value}" empty=${!value}`);
     if (!value) return;
     dbg(`SUBMIT_CONFIRM → onConfirm("${value}")`);
     onConfirm(value);
     setToteBarcode('');
+    if (inputRef.current) inputRef.current.value = '';
   };
 
   return (
