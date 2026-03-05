@@ -1,57 +1,17 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import { Package, X } from 'lucide-react';
-import { normalizeToteBarcode } from '../utils/normalizeToteBarcode';
 
 export default function GetToteModal({ orderNumber, customer, expectedTote, onConfirm, onClose }) {
   const [toteBarcode, setToteBarcode] = useState('');
-  const [error, setError] = useState('');
   const inputRef = useRef(null);
-  const errorTimeoutRef = useRef(null);
 
-  useEffect(() => {
-    // Clear any pending error timeout on unmount
-    return () => {
-      if (errorTimeoutRef.current) {
-        clearTimeout(errorTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const handleSubmit = useCallback((e) => {
-    e?.preventDefault();
-
-    console.log('RAW SCAN VALUE:', JSON.stringify(toteBarcode));
-    console.log('NORMALIZED:', normalizeToteBarcode(toteBarcode));
-
-    const normalized = normalizeToteBarcode(toteBarcode);
-
-    if (!normalized) {
-      setError('Invalid tote barcode');
-      return;
-    }
-
-    // If expectedTote exists, validate it matches (using normalized values)
-    if (expectedTote) {
-      const expectedNormalized = normalizeToteBarcode(expectedTote);
-
-      if (!expectedNormalized || normalized !== expectedNormalized) {
-        setError(`Wrong tote! Expected: ${expectedTote}`);
-
-        // Auto-clear the input after 2 seconds to allow rescanning
-        if (errorTimeoutRef.current) {
-          clearTimeout(errorTimeoutRef.current);
-        }
-        errorTimeoutRef.current = setTimeout(() => {
-          setToteBarcode('');
-          setError('');
-        }, 2000);
-
-        return;
-      }
-    }
-
-    onConfirm(normalized);
-  }, [toteBarcode, expectedTote, onConfirm]);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const value = toteBarcode?.trim();
+    if (!value) return;
+    onConfirm(value);
+    setToteBarcode('');
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
@@ -106,12 +66,6 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
               autoFocus
             />
           </div>
-
-          {error && (
-            <div className="mb-4 p-3 bg-warehouse-red/20 border border-warehouse-red rounded">
-              <p className="text-warehouse-red text-sm">{error}</p>
-            </div>
-          )}
 
           <button
             type="submit"
