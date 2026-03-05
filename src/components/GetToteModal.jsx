@@ -44,18 +44,22 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Scanner types directly into DOM, bypassing React onChange.
-    // React state (toteBarcode) stays empty — read DOM value as fallback.
-    const domValue = inputRef.current?.value || '';
-    const value = (toteBarcode || domValue).trim();
-    dbg(`SUBMIT state="${toteBarcode}" dom="${domValue}" used="${value}" empty=${!value}`);
+  const confirmValue = useCallback((rawValue) => {
+    const value = rawValue?.trim();
+    dbg(`CONFIRM_ATTEMPT raw="${rawValue}" trimmed="${value}" empty=${!value}`);
     if (!value) return;
-    dbg(`SUBMIT_CONFIRM → onConfirm("${value}")`);
-    onConfirm(value);
+    dbg(`CONFIRM_OK → onConfirm("${value}")`);
+    onConfirmRef.current(value);
     setToteBarcode('');
     if (inputRef.current) inputRef.current.value = '';
+  }, [dbg]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // By form submit time React has already reset the DOM to state "".
+    // Use toteBarcode state (typed manually) as the value here.
+    dbg(`SUBMIT state="${toteBarcode}"`);
+    confirmValue(toteBarcode);
   };
 
   return (
@@ -104,11 +108,15 @@ export default function GetToteModal({ orderNumber, customer, expectedTote, onCo
                 dbg(`INPUT val="${e.target.value}" len=${e.target.value.length}`);
               }}
               onKeyDown={(e) => {
-                dbg(`KEY key="${e.key}" code=${e.keyCode} val="${e.target.value}"`);
-                if (e.keyCode === 10) {
-                  dbg('LF_DETECTED → handleSubmit');
+                const isEnter = e.key === 'Enter' || e.keyCode === 13 || e.keyCode === 10;
+                dbg(`KEY key="${e.key}" code=${e.keyCode} val="${e.target.value}" isEnter=${isEnter}`);
+                if (isEnter) {
+                  // Read e.target.value NOW — React will reset DOM to state "" immediately after.
+                  const captured = e.target.value;
+                  dbg(`ENTER_CAPTURED val="${captured}"`);
                   e.preventDefault();
-                  handleSubmit(e);
+                  // Prefer DOM value (scanner typed here); fall back to React state (manual typing).
+                  confirmValue(captured || toteBarcode);
                 }
               }}
               onFocus={() => dbg('INPUT_FOCUS')}
