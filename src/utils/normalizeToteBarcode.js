@@ -1,12 +1,20 @@
 export function normalizeToteBarcode(input) {
   if (!input) return null;
 
-  const cleaned = String(input)
-    .replace(/[\n\r\t]/g, '')
-    .trim()
-    .toUpperCase();
+  // Convert to string
+  let value = String(input);
 
-  const digits = cleaned.replace(/\D/g, '');
+  // Remove ALL control characters
+  value = value.replace(/[\x00-\x1F\x7F]/g, '');
+
+  // Remove whitespace
+  value = value.trim();
+
+  // Uppercase
+  value = value.toUpperCase();
+
+  // Extract digits
+  const digits = value.replace(/\D/g, '');
 
   if (!digits) return null;
 
